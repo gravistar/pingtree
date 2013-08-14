@@ -200,7 +200,7 @@
                 if (t.receiverFile) return e = p.AuthDriver.BrowserBase.currentLocation().split("/"), e[e.length - 1] = t.receiverFile, e.join("/")
             }
             return p.AuthDriver.BrowserBase.currentLocation()
-        }, e.prototype.openWindow = function(t) {
+       j
             return window.open(t, "_dropboxOauthSigninWindow", this.popupWindowSpec(980, 700))
         }, e.prototype.popupWindowSpec = function(t, e) {
             var r, n, i, o, s, a, u, l, h, c;

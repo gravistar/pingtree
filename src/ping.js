@@ -8,11 +8,12 @@
  *      methods for doing basic manipulations (CRUD type stuff) with the different
  *      data structures.
  *
+ *      Screw it, I've decided that these will be dependent on the datastore api.
+ *
  * Schema:
  *
  * Summary: Manages what should templates should be displayed on what day
  * Scheduler : {
- *      id : String.
  *      schedule : a 2D Array of length 7. [0...6] correspond to [Sunday...Monday].
  *          Elements of this array are arrays of template_id's that will be shown for
  *          the day
@@ -21,7 +22,6 @@
  *
  * Summary: Analogous to dirs in a filesystem.  Just a way of organizing targets.
  * Category : {
- *      id : String.
  *      name : String.
  *      children : an Array. Just the subcategories. Interior nodes of this tree.
  *      targets : an Array. Actual targets that should be shown. Leaves of this tree.
@@ -42,7 +42,6 @@
  *  when doing statistics.
  *
  * Target : {
- *      id : String.
  *      name : String.
  *      val : double. the target value.
  *      val_upper_bound : boolean. true if val is an upper bound. otherwise, it's a lower bound.
@@ -54,7 +53,6 @@
  *
  * I do have an idea for a more general target, though.  It looks like this:
  * GeneralTarget : {
- *      id : String.
  *      nameFn : String. a simple expression like "incline bench $count x $val0" that will be
  *          parsed to produce the name. Meant to be used on this.
  *      vals : Array of double. the target values which user has defined some semantics on.
@@ -69,7 +67,6 @@
  * Summary: An attempt at a target that I want recorded.  Can be an overshoot or an undershoot. Pings are immutable,
  *          but they are deletable.  So if I make a mistake, I'll delete the bad one and replace it with a fixed one.
  * Ping : {
- *      id : String.
  *      target_id : what target this is for (provided by the datastore)
  *      val : double. the numerical value associated with this ping
  *      timestamp : creation time
