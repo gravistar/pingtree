@@ -1,4 +1,10 @@
 #!/usr/bin/env node
+
+/**
+ * This just parses the JSON result of the a curl request and adds the fields
+ * needed to make it useable by client.
+ */
+
 var argv = process.argv;
 var inputStream = process.stdin;
 // argv[0] = node 

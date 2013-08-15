@@ -147,50 +147,25 @@ var PingTree = {
             oldScheduler);
     },
 
-    /**
-     *  Ping : {
-     *     target_id : what target this is for (provided by the datastore)
-     *     val : double. the numerical value associated with this ping
-     *     timestamp : creation time
-     *  }
-     *
-     *  Immutable
-     */
-    buildPing : function(targetId, val, createTime) {
+    buildTarget : function(name, val, val_upper_bound, val_name, count, count_upper_bound, create_time) {
         return {
-            getTargetId : function() {
-                return targetId;
-            },
-            getVal : function() {
-                return val;
-            },
-            getCreateTime : function() {
-                return createTime;
-            }
-        }
+            name : name,
+            val : val,
+            val_upper_bound: val_upper_bound,
+            val_name : val_name,
+            count : count,
+            count_upper_bound : count_upper_bound,
+            create_time : create_time
+        };
     },
 
-    /**
-     * Immutable
-     * @param val
-     * @param upperBound
-     * @param createTime
-     * @returns {{getVal: Function, getUpperBound: Function, getCreateTime: Function}}
-     */
-    buildTarget : function(val, upperBound, createTime) {
+    buildPing : function(target_id, val, create_time) {
         return {
-            getVal : function() {
-                return val;
-            },
-            getUpperBound : function() {
-                return upperBound;
-            },
-            getCreateTime : function() {
-                return createTime;
-            }
+            target_id: target_id,
+            val : val,
+            create_time : create_time
         };
     }
-    // Datastore Interaction
 };
 
 exports.PingTree = PingTree;

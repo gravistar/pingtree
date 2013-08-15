@@ -25,11 +25,12 @@
 
 // get the required modules
 var Dropbox = require("./datastore.js");
+var PingTree = require("./ping.js");
 var assert = require("assert");
 
 var client = new Dropbox.Client(
     { uid: '142146546',
-        token: '6b0t0Cany2wAAAAAAAAAAcmnVd9r4lyOtv7-hYD738IJrW0j7WFS6Yq-SDdq4ErD',
+        token: 'Xm_TkVPab2gAAAAAAAAAATaslbt3Tij7F2qN-GA5OmPdYGeC6uTZm-SmlUOPpWmE',
         key: 'lzicyzey114yb0e',
         secret: 'yl9keexb1m84ezf' }
 );
@@ -37,6 +38,42 @@ var client = new Dropbox.Client(
 client.authenticate();
 if (client.isAuthenticated()){
     console.log("WOOT!");
+
+    // get datastore
+    describe("Dropbox.Datastore", function () {
+        client.getDatastoreManager().openDefaultDatastore(function(err, datastore){
+            if (err) {
+                console.log("Error opening default datastore: " + err);
+                return;
+            }
+
+            // create tables
+            pingTable = datastore.getTable('pings');
+            targetTable = datastore.getTable('targets');
+
+            console.log ("Done creating tables");
+
+            // add stuff and get them
+            target = pingTable.insert(PingTree.PingTree.buildTarget("target 1", 1, false, " val ", 1, false, new Date()));
+            ping = pingTable.insert(PingTree.PingTree.buildPing(target.getId(), 1, new Date()));
+
+            // check to see the records are there
+            pingIds = pingTable.listTableIds();
+            targetIds = targetTable.listTableIds();
+
+            describe("Table", function() {
+                describe("#insert", function() {
+                    it("should pass and these records should show in browser", function(done) {
+                        console.log("Done running insert tests");
+                        assert(pingIds.contains(ping.getId()));
+                        assert(targetIds.contains(target.getId()));
+                        done();
+                    })
+                })
+            })
+            datastore.close();
+        });
+    })
 }
 
 
