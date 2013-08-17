@@ -9,9 +9,8 @@
 var Dropbox = require("./datastore.js");
 var PingTree = require("./ping.js");
 
-var client = new Dropbox.Client(
-    { uid: '142146546',
-        token: 'BFnsMvbILTEAAAAAAAAAAf8ZVMmhmQtci1vvgZ9o6GGPSouFkklQESiKGHNdKfnv',
+var client = new Dropbox.Client({ uid: '142146546',
+        token: 'kvuAWN7bXm0AAAAAAAAAAY6Qai1-WVPFgbaFyA__ba2_C9hXCeT7u7uN0nHjMW5C',
         key: 'lzicyzey114yb0e',
         secret: 'yl9keexb1m84ezf' }
 );
@@ -53,5 +52,6 @@ if (client.isAuthenticated()){
             }
         };
         timeoutCheck();
+        console.log("after timeout thing");
     });
 }

@@ -21,9 +21,9 @@
  * }
  *
  * Summary: Analogous to dirs in a filesystem.  Just a way of organizing targets.
- * Category : {
+ * Template : {
  *      name : String.
- *      children : an Array. Just the subcategories. Interior nodes of this tree.
+ *      children : an Array. Just the subtemplates. Interior nodes of this tree.
  *      targets : an Array. Actual targets that should be shown. Leaves of this tree.
  * }
  *
@@ -145,6 +145,16 @@ var PingTree = {
         return buildScheduler(updatedSchedule,
             oldScheduler.getResetTime(),
             oldScheduler);
+    },
+
+    // what's a good way to check if all the fields are set? just a validator method?
+
+    buildTemplate : function (name, children, targets) {
+        return {
+            name : name,
+            children: children,
+            targets: targets
+        };
     },
 
     buildTarget : function(name, val, val_upper_bound, val_name, count, count_upper_bound, create_time) {

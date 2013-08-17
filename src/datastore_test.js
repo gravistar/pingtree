@@ -26,11 +26,12 @@
 // get the required modules
 var Dropbox = require("./datastore.js");
 var PingTree = require("./ping.js");
+var PingUtil = require("./ping_utils.js");
 var assert = require("assert");
+var DatastoreUtil = require("./datastore_util.js");
 
-var client = new Dropbox.Client(
-    { uid: '142146546',
-        token: 'Xm_TkVPab2gAAAAAAAAAATaslbt3Tij7F2qN-GA5OmPdYGeC6uTZm-SmlUOPpWmE',
+var client = new Dropbox.Client({ uid: '142146546',
+        token: 'aQrzcaRSZXUAAAAAAAAAAa3mGGoGntbXCBip_CYlb9tg8U92PsarbG1KC4qU4OVa',
         key: 'lzicyzey114yb0e',
         secret: 'yl9keexb1m84ezf' }
 );
@@ -41,38 +42,93 @@ if (client.isAuthenticated()){
 
     // get datastore
     describe("Dropbox.Datastore", function () {
-        client.getDatastoreManager().openDefaultDatastore(function(err, datastore){
-            if (err) {
-                console.log("Error opening default datastore: " + err);
-                return;
-            }
+        it('should be authenticated', function (done) {
 
-            // create tables
-            pingTable = datastore.getTable('pings');
-            targetTable = datastore.getTable('targets');
+            var pingTableName = 'ping-test', targetTableName = 'target-test',
+                templateTableName = 'template-test';
 
-            console.log ("Done creating tables");
+            client.getDatastoreManager().openDefaultDatastore(function(err, datastore){
 
-            // add stuff and get them
-            target = pingTable.insert(PingTree.PingTree.buildTarget("target 1", 1, false, " val ", 1, false, new Date()));
-            ping = pingTable.insert(PingTree.PingTree.buildPing(target.getId(), 1, new Date()));
+                if (err) {
+                    console.log("Error opening default datastore: " + err);
+                    return;
+                }
 
-            // check to see the records are there
-            pingIds = pingTable.listTableIds();
-            targetIds = targetTable.listTableIds();
+                var syncIt = function() {
+                    DatastoreUtil.DatastoreUtil.waitForSync(datastore, function(datastore, thunk) {
+                        console.log("callback called");
+                        thunk();
+                    }, undefined, undefined, done);
+                };
 
-            describe("Table", function() {
-                describe("#insert", function() {
-                    it("should pass and these records should show in browser", function(done) {
-                        console.log("Done running insert tests");
-                        assert(pingIds.contains(ping.getId()));
-                        assert(targetIds.contains(target.getId()));
-                        done();
+                var closeIt = function() {
+                    DatastoreUtil.DatastoreUtil.waitForSync(datastore, function(datastore, thunk) {
+                        datastore.close();
+                        thunk();
+                    }, undefined, undefined, done);
+                };
+
+                // create tables
+                var pingTable = datastore.getTable(pingTableName);
+                var targetTable = datastore.getTable(targetTableName);
+                var templateTable = datastore.getTable(templateTableName);
+
+                // wipe all existing data
+                DatastoreUtil.DatastoreUtil.wipe(pingTable);
+                DatastoreUtil.DatastoreUtil.wipe(targetTable);
+                DatastoreUtil.DatastoreUtil.wipe(templateTable);
+
+                // add stuff and get them
+                var target = targetTable.insert(PingTree.PingTree.buildTarget("target 0", 1, false, " val ", 1, false, new Date()));
+                var target1 = targetTable.insert(PingTree.PingTree.buildTarget("target 1", 1, false, " val ", 1, true, new Date()));
+                var ping = pingTable.insert(PingTree.PingTree.buildPing(target.getId(), 1, new Date()));
+                var badPing = pingTable.insert(PingTree.PingTree.buildPing("-1", 1, new Date()));
+
+                var botTemplate = templateTable.insert(PingTree.PingTree.buildTemplate("leaf", [], [target.getId()]));
+                var topTemplate = templateTable.insert(PingTree.PingTree.buildTemplate("root", [botTemplate.getId()], [target1.getId()]));
+
+                // result of getting something from the datastore
+                var fetched;
+
+                // Get pings of a target
+                describe("Target ", function() {
+                    describe("#getPings", function() {
+                        it ("should contain ping", function () {
+                            fetched = pingTable.query({target_id: target.getId()});
+                            assert(fetched.length==1);
+                            assert(fetched[0].getId() == ping.getId());
+                        })
                     })
                 })
-            })
-            datastore.close();
-        });
+
+                // Get the shallow targets of a template
+                describe("Template ", function() {
+                    describe("#getShallowTargets", function() {
+                        it ("should contain target1 only", function(){
+                            fetched = DatastoreUtil.DatastoreUtil.bulkGet(targetTable, topTemplate.get("targets"));
+                            assert(fetched.length==1);
+                            assert(fetched[0].getId() == target1.getId());
+                        })
+                    })
+                })
+
+                // Get the deep targets of a template
+                describe("Template ", function() {
+                    describe("#getDeepTargets", function() {
+                        it ("should contain both target and target1", function() {
+                            fetched = PingUtil.PingUtils.allTargets(topTemplate, templateTable, targetTable);
+                            assert(fetched.length==2);
+                            assert(fetched[0].getId() == target1.getId());
+                            assert(fetched[1].getId() == target.getId());
+                        })
+                    })
+                })
+
+
+                // doesn't really matter when we call this since it's async...
+                syncIt();
+            });
+        })
     })
 }
 
