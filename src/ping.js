@@ -14,16 +14,18 @@
  *
  * Summary: Manages what should templates should be displayed on what day
  * Scheduler : {
- *      schedule : a 2D Array of length 7. [0...6] correspond to [Sunday...Monday].
- *          Elements of this array are arrays of template_id's that will be shown for
- *          the day
+ *      '0': global template for Sunday
+ *      .
+ *      .
+ *      .
+ *      '6': global template for Saturday
  *      reset_time : long. the hour/minute (in ms)
  * }
  *
- * Summary: Analogous to dirs in a filesystem.  Just a way of organizing targets.
+ * Template: Analogous to dirs in a filesystem.  Just a way of organizing targets.
  * Template : {
  *      name : String.
- *      children : an Array. Just the subtemplates. Interior nodes of this tree.
+ *      subtemplates : an Array. Just the subtemplates. Interior nodes of this tree.
  *      targets : an Array. Actual targets that should be shown. Leaves of this tree.
  * }
  *
@@ -73,91 +75,39 @@
  * }
  */
 
-var PingTree = {
-    /**
-     * Builds the scheduler. This should be a singleton.
-     * @param resetTime
-     * @returns {{getSchedule: Function, getResetTime: Function}}
-     */
-    emptySchedule : function() {
-        var schedule = [], numDays = 7;
-        for (var i = 0; i < numDays; i += 1)
-            schedule.push([])
-        return schedule;
-    },
+var PingTree = (function() {
+    var ret = {};
 
-    /**
-     * Creates a new scheduler. Defaults to oldScheduler if provided.
-     * Otherwise, defaults to basic empty scheduler.
-     * This should be private.
-     *
-     * @param schedule
-     * @param resetTime
-     * @param oldScheduler
-     * @returns {{getSchedule: Function, getResetTime: Function}}
-     */
-    buildScheduler : function(schedule, resetTime, oldScheduler) {
-        return {
-            getSchedule : function() {
-                return schedule ||
-                    (oldScheduler || oldScheduler.getSchedule()) || emptySchedule();
-            },
-            getResetTime : function() {
-                return resetTime ||
-                    (oldScheduler || oldScheduler.getResetTime()) || 0;
-            }
+    // makes empty templates for each and store the id
+    function buildScheduler (templateTable) {
+        var ret = {
+            'reset_time' : 0 // midnight
         };
-    },
+        var dayMap = {
+            '0' : "Sunday",
+            '1' : "Monday",
+            '2' : "Tuesday",
+            '3' : "Wednesday",
+            '4' : "Thursday",
+            '5' : "Friday",
+            '6' : "Saturday"
+        };
+        // create new global templates for each day and add the id to scheduler
+        for (var i=0; i<7; i+=1)
+            ret[i] = templateTable.insert(buildTemplate(dayMap[i], [], [])).getId();
 
-    /**
-     * Builds the initial scheduler, which is empty but properly set up.
-     * @returns {*}
-     */
-    initScheduler : function() {
-        return buildScheduler();
-    },
+        return ret;
+    };
 
-    changeResetTime : function (resetTime, oldScheduler) {
-        return buildScheduler(oldScheduler.getSchedule(),
-            resetTime,
-            oldScheduler);
-    },
-
-    addTarget : function(targetId, day, oldScheduler) {
-        // just need 1 level copy
-        var updatedSchedule = scheduler.getSchedule().slice(0);
-        updatedSchedule[day].push(targetId);
-        return buildScheduler(updatedSchedule,
-            oldScheduler.getResetTime(),
-            oldScheduler);
-    },
-
-    deleteTarget : function(targetId, day, oldScheduler) {
-        // just need 1 level copy
-        var updatedSchedule = scheduler.getSchedule().slice(0),
-            updatedDaySchedule = [];
-        // replace this with some functional thing
-        for (var i = 0; i < updatedSchedule.length; i += 1) {
-            if (updatedSchedule[i] !== targetId)
-                updatedDay.push(updatedSchedule[i])
-        }
-        updatedSchedule[day] = updatedDaySchedule;
-        return buildScheduler(updatedSchedule,
-            oldScheduler.getResetTime(),
-            oldScheduler);
-    },
-
-    // what's a good way to check if all the fields are set? just a validator method?
-
-    buildTemplate : function (name, children, targets) {
+    function buildTemplate (name, children, targets) {
         return {
             name : name,
-            children: children,
+            subtemplates: children,
             targets: targets
         };
-    },
+    };
 
-    buildTarget : function(name, val, val_upper_bound, val_name, count, count_upper_bound, create_time) {
+    function buildTarget(name, val, val_upper_bound, val_name, count, count_upper_bound, create_time) {
         return {
             name : name,
             val : val,
@@ -167,15 +117,21 @@ var PingTree = {
             count_upper_bound : count_upper_bound,
             create_time : create_time
         };
-    },
+    };
 
-    buildPing : function(target_id, val, create_time) {
+    function buildPing(target_id, val, create_time) {
         return {
             target_id: target_id,
             val : val,
             create_time : create_time
         };
-    }
-};
+    };
+
+    ret.buildScheduler = buildScheduler;
+    ret.buildTemplate = buildTemplate;
+    ret.buildTarget = buildTarget;
+    ret.buildPing = buildPing;
+    return ret;
+})();
 
 exports.PingTree = PingTree;

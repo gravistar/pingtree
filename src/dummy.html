@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+<head>
+    <title>Ping Tree</title>
+
+    <!-- todo:
+        1. definitely need to use RequireJS
+        -->
+
+    <!-- third party -->
+    <script src="zepto.js"></script>
+    <script src="bootstrap.js"></script>
+    <script src="datastore.js"></script>
+
+    <!-- mine -->
+    <script src="datastore_util.js"></script>
+    <script src="ping.js"></script>
+    <script src="ping_utils.js"></script>
+    <script src="app.js"></script>
+
+
+    <!-- style -->
+    <link rel="stylesheet" href="bootstrap.css">
+</head>
+<body>
+<!-- Hide UI until user has authenticated -->
+<div id="wrapper">
+    <div id="main" > <!-- set to style display:none later-->
+        <!-- Empty list that will be populated with tasks -->
+
+        <!-- add a template -->
+
+        <!-- all templates/targets get rendered here! -->
+        <div id="root-template">
+            <ul>
+                <li id="template0">
+                    <span>template0</span>
+                    <ul>
+                        <li id="target0">
+                            <span>target0 (target val: 3) (target count: 5)</span>
+                            <button class="show-pings">Show pings</button>
+                            <ul id="target0-pings">
+                                <li id="ping 0">
+                                    <span>val: 1 time: 1023040</span>
+                                    <button class='delete-ping'>&times;</button>
+                                </li>
+                                <li id="target0-pingsub">
+                                    <form>
+                                        a Value: <input type="text" placeholder="3" name="value">
+                                        <button class="add-ping">&plus;</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+                <li id="target1">
+                    <span>target1 (target val: 6) (target count: 5)</span>
+                    <button class="show-pings">Show pings</button>
+                </li>
+            </ul>
+        </div>
+
+        <script>
+            $("button.show-pings").parent().css('background-color', 'red');
+            $("li#target1").attr("blah","asdf");
+            $("li#target1[blah=asdf]").css('background-color', 'green');
+
+        </script>
+
+        <!-- Form to collect new tasks -->
+        <form id="addForm" method="post">
+            <input id="newTask" type="text" placeholder="Enter a new task..." />
+            <button id="addButton" type="submit">Add Task</button>
+        </form>
+    </div>
+
+    <div id="login">
+        <button id="loginButton">Link to Dropbox</button>
+    </div>
+</div>
+
+<script>$("#root-template")</script>
+</body>
+</html>

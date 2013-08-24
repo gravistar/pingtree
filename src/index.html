@@ -1,26 +1,31 @@
 <!doctype html>
 <html>
 	<head>
-		<title>Todo List</title>
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
-		<script src="https://www.dropbox.com/static/api/1/dropbox-datastores-0.1.0-b2.js"></script>
-		<script src="listtree.js"></script>
-		<link rel="stylesheet" href="style.css">
+		<title>Ping Tree</title>
+
+        <!-- todo:
+            1. definitely need to use RequireJS
+            -->
+
+        <!-- third party -->
+        <script src="zepto.js"></script>
+        <script src="bootstrap.js"></script>
+        <script src="datastore.js"></script>
+
+        <!-- mine -->
+        <script src="datastore_util.js"></script>
+        <script src="ping.js"></script>
+        <script src="ping_utils.js"></script>
+        <script src="app.js"></script>
+
+        <!-- style -->
+        <link rel="stylesheet" href="bootstrap.css">
 	</head>
 	<body>
 		<!-- Hide UI until user has authenticated -->
 		<div id="wrapper">
-			<h1>My Tasks</h1>
-
-			<div id="main" style="display:none">
-				<!-- Empty list that will be populated with tasks -->
-				<ul id="tasks"></ul>
-
-				<!-- Form to collect new tasks -->
-				<form id="addForm" method="post">
-					<input id="newTask" type="text" placeholder="Enter a new task..." />
-					<button id="addButton" type="submit">Add Task</button>
-				</form>
+			<div id="main" >
+                <!-- all the stuff goes here -->
 			</div>
 
 			<div id="login">

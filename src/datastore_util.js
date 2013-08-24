@@ -12,7 +12,7 @@
  *      (pings) are actually immutable.  So set shouldn't be needed for these.
  *
  *      I've toyed with the idea of making targets immutable, but I've decided that
- *      the faster route might just be to make everything >= Target immutable.
+ *      the faster route might just be to make everything >= Target mutable.
  */
 
 
