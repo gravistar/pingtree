@@ -110,27 +110,22 @@ $(function () {
             var day = date.getDay();
             var todayTemplateId = scheduler.get(day);
             var todayTemplate = templateTable.get(todayTemplateId);
-            var i;
 
             // delete this later:
-            var target = targetTable.insert(PingTree.buildTarget("target 0", 1, false, " val ", 1, false, new Date()));
-            var target1 = targetTable.insert(PingTree.buildTarget("target 1", 1, false, " val ", 1, true, new Date()));
-            var ping = pingTable.insert(PingTree.buildPing(target.getId(), 1, new Date()));
+            var botTemplate = templateTable.insert(PingTree.buildTemplate("leaf", todayTemplate.getId()));
 
-            var botTemplate = templateTable.insert(PingTree.buildTemplate("leaf", [], [target.getId()]));
+            var target = targetTable.insert(PingTree.buildTarget("target 0", botTemplate.getId(), 1, false, " val ", 1, false, new Date()));
+            var target1 = targetTable.insert(PingTree.buildTarget("target 1", todayTemplate.getId(), 1, false, " val ", 1, true, new Date()));
+            pingTable.insert(PingTree.buildPing(target.getId(), 1, new Date()));
 
-            var todayTargets = todayTemplate.get('targets');
-            var todayTemplates = todayTemplate.get('subtemplates');
+            DatastoreUtil.waitForSync(datastore, function(){
+                // render this shit
+                var $mainlist = $('<ul>');
+                $mainlist.append(renderTemplate(todayTemplate));
+                $('#main').append($mainlist);
+            });
 
-            todayTargets.push(target1.getId());
-            todayTemplates.push(botTemplate.getId());
-            todayTemplate.set('targets', todayTargets.toArray());
-            todayTemplate.set('subtemplates', todayTemplates.toArray());
-
-            // render this shit
-            var $mainlist = $('<ul>');
-            $mainlist.append(renderTemplate(todayTemplate));
-            $('#main').append($mainlist);
+            // add listeners to the records
         });
     }
 
@@ -142,31 +137,60 @@ $(function () {
      */
     function renderTemplate(template) {
         var id = template.getId(), name = template.get('name');
-        var $ret = $('<li>').attr('id', id).addClass('template').text(name);
+        var templateData = {
+            id: id,
+            name: name
+        };
+        var $template = ich.template(templateData);
         var i;
 
-        var $subelements = $('<ul>');
-
-        var subtemplateIds = template.get('subtemplates'), subtemplateId,
-            subtemplate;
-
         // render the subtemplates and append
-        for (i=0; i<subtemplateIds.length(); i+=1) {
-            subtemplateId = subtemplateIds.get(i);
-            subtemplate = templateTable.get(subtemplateId);
-            $subelements.append(renderTemplate(subtemplate));
-        }
+        var $subtemplates = $template.find('.subtemplates');
+        $subtemplates.empty();
+        var subtemplates = templateTable.query({parent_id : id});
 
-        var targetIds = template.get('targets'), targetId, target;
+        for (i=0; i<subtemplates.length; i+=1)
+            $subtemplates.append(renderTemplate(subtemplates[i]));
 
-        // render the targets and append
-        for (i=0; i<targetIds.length(); i+=1) {
-            targetId = targetIds.get(i);
-            target = targetTable.get(targetId);
-            $subelements.append(renderTarget(target));
-        }
+        var $targets = $template.find('.targets');
+        $targets.empty();
+        var targets = targetTable.query({parent_id : id});
 
-        return $ret.append($subelements);
+        for (i=0; i<targets.length; i+=1)
+            $targets.append(renderTarget(targets[i]));
+
+        return $template.append(renderTemplateForm()).append(renderTargetForm());
+    }
+
+    /**
+     * Fill in the following:
+     *      name of the template.
+     *
+     * Has the following buttons:
+     *      Submit - creates a new Template record.
+     *      Delete - gets rid of this form.
+     * @returns {*|jQuery}
+     *
+     */
+    function renderTemplateForm() {
+        return ich.template_form();
+    }
+
+    /**
+     * Fill in the following:
+     *      name of the value to track.
+     *      the target value.
+     *      whether the target value is an upper bound (checkbox).
+     *      whether the count is an upper bound (checkbox).
+     *
+     * Has the following buttons:
+     *      Submit - creates a new Target record.
+     *      Delete - gets rid of this form.
+     * @returns {*|jQuery}
+     *
+     */
+    function renderTargetForm() {
+        return ich.target_form();
     }
 
     /**
@@ -177,13 +201,12 @@ $(function () {
      * @returns {*}
      *      jquery li element which has form for creating a new ping
      */
-    function renderPingForm(valName, defaultVal) {
-        var $ret = $('<form>').addClass('pingform').text(valName + ': ');
-        var $input = $('<input>').attr('type', 'text')
-            .attr('placeholder', defaultVal)
-            .attr('name', 'value');
-        var $button = $('<button>').addClass('pingform-sub').html('&plus;').attr('type', 'submit');
-        return $('<li>').append($ret).append($input).append($button);
+    function renderPingForm(valName, targetVal) {
+        var pingFormData = {
+            valName: valName,
+            targetVal: targetVal
+        };
+        return ich.ping_form(pingFormData);
     }
 
     /**
@@ -193,10 +216,12 @@ $(function () {
      *      jquery li element for a ping which has its info and a delete button
      */
     function renderPing(ping) {
-        var id = ping.getId(), val = ping.get('val'), timestamp = ping.get('timestamp');
-        var $ret = $('<li>').attr('id', id).text(val + ' time: ' + timestamp);
-        var $delButton = $('<button>').addClass('ping-delete').html('&times;');
-        return $ret.append($delButton);
+        var pingData = {
+            id : ping.getId(),
+            val : ping.get('val'),
+            timestamp : ping.get('timestamp')
+        };
+        return ich.ping(pingData);
     }
 
     /**
@@ -207,28 +232,26 @@ $(function () {
      *      target as well as a pingform which is used to ping the target.
      */
     function renderTarget(target) {
-        var id = target.getId(), val = target.get('val'), valName = target.get('val_name'),
-            count = target.get('count'), name = target.get('name');
-        var $ret = $('<li>').attr('id', id).addClass('target').addClass('target-info')
-            .text('(name: ' + name + ') ' +
-                '(' + valName + ': ' + val + ')' +
-                ' (target pings: ' + count + ')');
-        var $delButton = $('<button>').addClass('target-delete').html('&times;');
+        var id = target.getId();
+        var targetData = {
+            id : target.getId(),
+            val : target.get('val'),
+            valName : target.get('val_name'),
+            count : target.get('count'),
+            name : target.get('name')
+        };
+        var i;
 
-        var $subelements = $('<ul>');
+        var $target = ich.target(targetData);
 
-        // fetch all pings which belong to this target
-        var pings = pingTable.query({'target_id' : id});
-        var ping;
+        var pings = pingTable.query({target_id : id});
+        var $pings = $target.find('.pings');
+        $pings.empty();
 
-        for (var i=0; i<pings.length; i+=1) {
-            ping = pings[i];
-            $subelements.append(renderPing(ping));
-        }
+        for (i=0; i<pings.length; i+=1)
+            $pings.append(renderPing(pings[i]));
 
-        var $pingForm = renderPingForm(id, valName, val);
-        $subelements.append($pingForm);
-        return $ret.append($delButton).append($subelements);
+        return $target.append(renderPingForm(target.get('val_name'), target.get('val')));
     }
 
     // Set the completed status of a task with the given ID.
@@ -256,6 +279,17 @@ $(function () {
             deleteRecord(id);
         });
     }
+
+    function addTargetListeners() {
+
+    }
+
+    function addTemplateListeners() {
+
+    }
+
+
+    // record changed listeners
 
     // Hook form submit and add the new task.
     $('#addForm').submit(function (e) {

@@ -11,6 +11,7 @@
         <script src="zepto.js"></script>
         <script src="bootstrap.js"></script>
         <script src="datastore.js"></script>
+        <script src="icanhaz.js"></script>
 
         <!-- mine -->
         <script src="datastore_util.js"></script>
@@ -20,6 +21,83 @@
 
         <!-- style -->
         <link rel="stylesheet" href="bootstrap.css">
+
+        <!-- i can haz scripts -->
+        <script id="template" type="text/html">
+            <li id={{id}} class = "template">
+                Template: {{name}}
+                <button class = "delete_template">
+                    &times;
+                </button>
+                <ul class = "subtemplates">
+                </ul>
+                <ul class = "targets">
+                </ul>
+                <!-- put template form here -->
+                <!-- put the target form here -->
+            </li>
+        </script>
+
+        <script id="template_form" type="text/html">
+            <form class="template_form">
+                <div>
+                    <label>Template name:
+                        <input type="text" id="name">
+                    </label>
+                </div>
+                <button type="submit">&plus;</button>
+            </form>
+        </script>
+
+        <script id="target" type="text/html">
+            <li id={{id}} class = "target">
+                (Target: {{name}}) ({{valName}}: {{val}}) (Ping Count: {{count}})
+                <button class = "target_delete">
+                    &times;
+                </button>
+                <ul class = "pings">
+                </ul>
+                <!-- put the ping form here -->
+            </li>
+        </script>
+
+        <script id="target_form" type="text/html">
+            <form class="target_form">
+                <label>Val name:
+                    <input type="text"/>
+                </label>
+                <label>Val:
+                    <input type="number">
+                </label>
+                <label>Upper bound on val?
+                    <input type="checkbox">
+                </label>
+                <label>Upper bound on count?
+                    <input type="checkbox">
+                </label>
+                <button type="submit">
+                    &plus;
+                </button>
+            </form>
+        </script>
+
+        <script id="ping" type="text/html">
+            <li id={{id}} class="ping">
+                {{valName}}: {{val}}  Time: {{timestamp}}
+            </li>
+        </script>
+
+        <script id="ping_form" type="text/html">
+            <form>
+                <label>{{valName}}:
+                   <input type="number" placeholder={{targetVal}}>
+                </label>
+                <button type="submit">
+                    &plus;
+                </button>
+            </form>
+        </script>
+
 	</head>
 	<body>
 		<!-- Hide UI until user has authenticated -->

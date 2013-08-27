@@ -22,11 +22,13 @@
  *      reset_time : long. the hour/minute (in ms)
  * }
  *
- * Template: Analogous to dirs in a filesystem.  Just a way of organizing targets.
+ * Summary: Analogous to dirs in a filesystem.  Just a way of organizing targets.
  * Template : {
  *      name : String.
- *      subtemplates : an Array. Just the subtemplates. Interior nodes of this tree.
- *      targets : an Array. Actual targets that should be shown. Leaves of this tree.
+ *      parent_id : String. Id of the parent template. null if it has no parent.
+ *      subtemplates : Array[String]. Just the subtemplates. Interior nodes of this tree.
+ *      targets : Array[String]. Actual targets that should be shown. Leaves of this tree.
+ *      expanded : boolean. True if this was last expanded in the UI
  * }
  *
  * Summary: A simple goal that I want to reach.  I think a surprising number of recurring goals can be
@@ -45,12 +47,14 @@
  *
  * Target : {
  *      name : String.
+ *      parent_id : String. what template this belongs to
  *      val : double. the target value.
  *      val_upper_bound : boolean. true if val is an upper bound. otherwise, it's a lower bound.
  *      val_name : String.
  *      count : long. the target count.
  *      count_upper_bound : boolean. true if count is an upper bound. otherwise, it's a lower bound.
  *      create_time : long.
+ *      expanded : boolean. True if this was last expanded in the UI
  * }
  *
  * I do have an idea for a more general target, though.  It looks like this:
@@ -64,19 +68,20 @@
  *      count : long. the target count.
  *      count_upper_bound. boolean. true if count is an upper bound. otherwise, it's a lower bound.
  *      create_time : long.
+ *      expanded : boolean. True if this was last expanded in the UI
  * }
  *
  * Summary: An attempt at a target that I want recorded.  Can be an overshoot or an undershoot. Pings are immutable,
  *          but they are deletable.  So if I make a mistake, I'll delete the bad one and replace it with a fixed one.
  * Ping : {
- *      target_id : what target this is for (provided by the datastore)
+ *      parent_id : String. what target this is for (provided by the datastore)
  *      val : double. the numerical value associated with this ping
- *      timestamp : creation time
+ *      timestamp : Date. creation time
  * }
  */
 
 var PingTree = (function() {
-    var ret = {};
+    var ret = {}, NO_PARENT = "NO_PARENT";
 
     // makes empty templates for each and store the id
     function buildScheduler (templateTable) {
@@ -94,34 +99,38 @@ var PingTree = (function() {
         };
         // create new global templates for each day and add the id to scheduler
         for (var i=0; i<7; i+=1)
-            ret[i] = templateTable.insert(buildTemplate(dayMap[i], [], [])).getId();
+            ret[i] = templateTable.insert(buildTemplate(dayMap[i], NO_PARENT)).getId();
+
+        ret.expanded = false;
 
         return ret;
     };
 
-    function buildTemplate (name, children, targets) {
+    function buildTemplate (name, parent_id) {
         return {
             name : name,
-            subtemplates: children,
-            targets: targets
+            parent_id : parent_id
         };
     };
 
-    function buildTarget(name, val, val_upper_bound, val_name, count, count_upper_bound, create_time) {
+    function buildTarget(name, parent_id, val, val_upper_bound, val_name,
+                         count, count_upper_bound, create_time) {
         return {
             name : name,
+            parent_id : parent_id,
             val : val,
             val_upper_bound: val_upper_bound,
             val_name : val_name,
             count : count,
             count_upper_bound : count_upper_bound,
-            create_time : create_time
+            create_time : create_time,
+            expanded : false
         };
     };
 
-    function buildPing(target_id, val, create_time) {
+    function buildPing(parent_id, val, create_time) {
         return {
-            target_id: target_id,
+            parent_id: parent_id,
             val : val,
             create_time : create_time
         };
@@ -131,6 +140,7 @@ var PingTree = (function() {
     ret.buildTemplate = buildTemplate;
     ret.buildTarget = buildTarget;
     ret.buildPing = buildPing;
+    ret.NO_PARENT = NO_PARENT;
     return ret;
 })();
 
