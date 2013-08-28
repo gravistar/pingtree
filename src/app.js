@@ -127,7 +127,6 @@ $(function () {
             $subtemplates.append(renderTemplate(subtemplates[i]));
 
         var $targets = $template.children('.targets');
-        console.log("targets found: " + $targets.length);
         $targets.empty();
         var targets = targetTable.query({parent_id : id});
 
@@ -223,8 +222,6 @@ $(function () {
         var $pings = $target.children('.pings');
         $pings.empty();
 
-        console.log("number of pings for target: " + target.get('name') + " is " + pings.length);
-
         for (i=0; i<pings.length; i+=1)
             $pings.append(renderPing(pings[i]));
 
@@ -271,8 +268,11 @@ $(function () {
      */
     function pingAddCb(e) {
         e.preventDefault();
+        var $target = $(this).closest('.target');
         var $parent = $(this).parent();
-        var parent_id = $parent.attr('id'), val = $parent.children("input").val(), createTime = new Date();
+        var parent_id = $target.attr('id'), val = $parent.find("input").val(), createTime = new Date();
+        var ping = PingTree.buildPing(parent_id, val, createTime);
+        console.log("building ping! parent_id: " + parent_id + " val: " + val + " create: " + createTime);
         pingTable.insert(PingTree.buildPing(parent_id, val , createTime));
     }
 
