@@ -29,6 +29,15 @@
                 <button class = "delete_template">
                     &times;
                 </button>
+
+                <button class = "show_template_form">
+                    &plus;
+                </button>
+
+                <button class = "show_target_form">
+                    *
+                </button>
+
                 <ul class = "subtemplates">
                 </ul>
                 <ul class = "targets">
@@ -56,6 +65,9 @@
                 (Target: {{name}}) ({{valName}}: {{val}}) (Ping Count: {{count}})
                 <button class = "target_delete">
                     &times;
+                </button>
+                <button class = "show_ping_form">
+                    &plus;
                 </button>
                 <ul class = "pings">
                 </ul>
@@ -96,7 +108,7 @@
         </script>
 
         <script id="ping_form" type="text/html">
-            <form>
+            <form class="ping_form">
                 <label>{{valName}}:
                    <input type="number" placeholder={{targetVal}}>
                 </label>

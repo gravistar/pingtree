@@ -134,7 +134,11 @@ $(function () {
         for (i=0; i<targets.length; i+=1)
             $targets.append(renderTarget(targets[i]));
 
-        return $template.append(renderTemplateForm()).append(renderTargetForm());
+        $templateForm = renderTemplateForm();
+        $targetForm = renderTargetForm();
+        $templateForm.hide();
+        $targetForm.hide();
+        return $template.append($templateForm).append($targetForm);
     }
 
     /**
@@ -226,7 +230,9 @@ $(function () {
         for (i=0; i<pings.length; i+=1)
             $pings.append(renderPing(pings[i]));
 
-        return $target.append(renderPingForm(target.get('val_name'), target.get('val')));
+        $pingForm = renderPingForm(target.get('val_name'), target.get('val'));
+        $pingForm.hide();
+        return $target.append($pingForm);
     }
 
     function addRecordsChangedListeners(datastore) {
@@ -278,6 +284,21 @@ $(function () {
         $root.find('button.ping_add').click(pingAddCb);
         $root.find('button.target_add').click(targetAddCb);
         $root.find('button.template_add').click(templateAddCb);
+        $root.find('button.show_template_form').click(function(e) {
+            e.preventDefault();
+            var $parent = $(this).parent();
+            $parent.children('.template_form').toggle();
+        });
+        $root.find('button.show_target_form').click(function(e) {
+            e.preventDefault();
+            var $parent = $(this).parent();
+            $parent.children('.target_form').toggle();
+        });
+        $root.find('button.show_ping_form').click(function(e) {
+            e.preventDefault();
+            var $parent = $(this).parent();
+            $parent.children('.ping_form').toggle();
+        });
     }
 
     /**
