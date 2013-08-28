@@ -119,14 +119,15 @@ $(function () {
         var i;
 
         // render the subtemplates and append
-        var $subtemplates = $template.find('.subtemplates');
+        var $subtemplates = $template.children('.subtemplates');
         $subtemplates.empty();
         var subtemplates = templateTable.query({parent_id : id});
 
         for (i=0; i<subtemplates.length; i+=1)
             $subtemplates.append(renderTemplate(subtemplates[i]));
 
-        var $targets = $template.find('.targets');
+        var $targets = $template.children('.targets');
+        console.log("targets found: " + $targets.length);
         $targets.empty();
         var targets = targetTable.query({parent_id : id});
 
@@ -219,7 +220,7 @@ $(function () {
         var $target = ich.target(targetData);
 
         var pings = pingTable.query({parent_id : id});
-        var $pings = $target.find('.pings');
+        var $pings = $target.children('.pings');
         $pings.empty();
 
         console.log("number of pings for target: " + target.get('name') + " is " + pings.length);
@@ -271,7 +272,7 @@ $(function () {
     function pingAddCb(e) {
         e.preventDefault();
         var $parent = $(this).parent();
-        var parent_id = $parent.attr('id'), val = $parent.find("input").val(), createTime = new Date();
+        var parent_id = $parent.attr('id'), val = $parent.children("input").val(), createTime = new Date();
         pingTable.insert(PingTree.buildPing(parent_id, val , createTime));
     }
 
