@@ -61,11 +61,24 @@
             </ul>
         </div>
 
+        <div id="derp">
+            <form id="form1">
+                <label id="label1">
+                    <input type="text" name="asdf">
+                </label>
+                <button id="button1">&plus;</button>
+            <form>
+        </div>
+
         <script>
             $("button.show-pings").parent().css('background-color', 'red');
             $("li#target1").attr("blah","asdf");
             $("li#target1[blah=asdf]").css('background-color', 'green');
-
+            $('#button1').click(function(e){
+                e.preventDefault();
+                var input = $(this).parent().find("input[name='asdf']").val();
+                console.log(input);
+            });
         </script>
 
         <!-- Form to collect new tasks -->

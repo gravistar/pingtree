@@ -38,33 +38,6 @@ $(function () {
         });
     }
 
-    // updateList will be called every time the table changes.
-    function updateList(rootTemplate) {
-        $('#root-template').empty();
-
-
-        var records = taskTable.query();
-
-        // Sort by creation time.
-        records.sort(function (taskA, taskB) {
-            if (taskA.get('created') < taskB.get('created')) return -1;
-            if (taskA.get('created') > taskB.get('created')) return 1;
-            return 0;
-        });
-
-        // Add an item to the list for each task.
-        for (var i = 0; i < records.length; i++) {
-            var record = records[i];
-            $('#tasks').append(
-                renderTask(record.getId(),
-                    record.get('completed'),
-                    record.get('taskname')));
-        }
-
-        addListeners();
-        $('#newTask').focus();
-    }
-
     // The login button will start the authentication process.
     $('#loginButton').click(function (e) {
         e.preventDefault();
@@ -114,8 +87,8 @@ $(function () {
             // delete this later:
             var botTemplate = templateTable.insert(PingTree.buildTemplate("leaf", todayTemplate.getId()));
 
-            var target = targetTable.insert(PingTree.buildTarget("target 0", botTemplate.getId(), 1, false, " val ", 1, false, new Date()));
-            var target1 = targetTable.insert(PingTree.buildTarget("target 1", todayTemplate.getId(), 1, false, " val ", 1, true, new Date()));
+            var target = targetTable.insert(PingTree.buildTarget("target 0", botTemplate.getId(), 1, false, " val 0", 1, false, new Date()));
+            var target1 = targetTable.insert(PingTree.buildTarget("target 1", todayTemplate.getId(), 2, false, " val 1", 1, true, new Date()));
             pingTable.insert(PingTree.buildPing(target.getId(), 1, new Date()));
 
             DatastoreUtil.waitForSync(datastore, function(){
@@ -123,9 +96,10 @@ $(function () {
                 var $mainlist = $('<ul>');
                 $mainlist.append(renderTemplate(todayTemplate));
                 $('#main').append($mainlist);
+                addListeners();
+                addRecordsChangedListeners(datastore);
             });
 
-            // add listeners to the records
         });
     }
 
@@ -244,9 +218,11 @@ $(function () {
 
         var $target = ich.target(targetData);
 
-        var pings = pingTable.query({target_id : id});
+        var pings = pingTable.query({parent_id : id});
         var $pings = $target.find('.pings');
         $pings.empty();
+
+        console.log("number of pings for target: " + target.get('name') + " is " + pings.length);
 
         for (i=0; i<pings.length; i+=1)
             $pings.append(renderPing(pings[i]));
@@ -254,52 +230,58 @@ $(function () {
         return $target.append(renderPingForm(target.get('val_name'), target.get('val')));
     }
 
-    // Set the completed status of a task with the given ID.
-    function setCompleted(id, completed) {
-        taskTable.get(id).set('completed', completed);
+    function addRecordsChangedListeners(datastore) {
+        datastore.recordsChanged.addListener(rcPingsChangedCb);
     }
 
-    // Delete the record with a given ID.
-    function deleteRecord(id) {
-        taskTable.get(id).deleteRecord();
+    /**
+     *
+     * @param rcEvent
+     */
+    function rcPingsChangedCb(rcEvent) {
+        console.log("callback invoked!!");
+        var changedPings = rcEvent.affectedRecordsForTable(pingTable), changedTargetIds = [];
+        var i, parent_id, changedTarget;
+
+        // get the affected target ids
+        for (i=0; i<changedPings.length; i+=1) {
+            parent_id = changedPings[i].get('parent_id');
+            if ($.indexOf(parent_id, changedTargetIds))
+                changedTargetIds.push(parent_id);
+        }
+
+        // render the affected target ids
+        for (i=0; i<changedTargetIds.length; i+=1) {
+            changedTarget = targetTable.get(changedTargetIds[i]);
+            $('#' + changedTarget.getId()).replaceWith(renderTarget(changedTarget));
+        }
     }
 
-    // Register event listeners to handle completing and deleting.
+    /**
+     * Registers all the DOM listeners. Should be called whenever the datastore is changed.
+     */
     function addListeners() {
-        $('span').click(function (e) {
-            e.preventDefault();
-            var li = $(this).parents('li');
-            var id = li.attr('id');
-            setCompleted(id, !li.hasClass('completed'));
-        });
+        $('button.ping_add').click(pingAddCb);
+    }
 
-        $('button.delete').click(function (e) {
-            e.preventDefault();
-            var id = $(this).parents('li').attr('id');
-            deleteRecord(id);
-        });
+    /**
+     * Callback for the ping_add button. Creates a new ping.
+     * @param e
+     */
+    function pingAddCb(e) {
+        e.preventDefault();
+        var $parent = $(this).parent();
+        var parent_id = $parent.attr('id'), val = $parent.find("input").val(), createTime = new Date();
+        pingTable.insert(PingTree.buildPing(parent_id, val , createTime));
     }
 
     function addTargetListeners() {
+        var parent_id = $('button.ping_add').parents('li').attr('id');
+        targetTable.insert(PingTree.buildTarget());
 
     }
 
     function addTemplateListeners() {
 
     }
-
-
-    // record changed listeners
-
-    // Hook form submit and add the new task.
-    $('#addForm').submit(function (e) {
-        e.preventDefault();
-        if ($('#newTask').val().length > 0) {
-            insertTask($('#newTask').val());
-            $('#newTask').val('');
-        }
-        return false;
-    });
-
-    $('#newTask').focus();
 });
