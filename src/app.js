@@ -94,9 +94,10 @@ $(function () {
             DatastoreUtil.waitForSync(datastore, function(){
                 // render this shit
                 var $mainlist = $('<ul>');
+                var $main = $('#main');
                 $mainlist.append(renderTemplate(todayTemplate));
                 $('#main').append($mainlist);
-                addListeners();
+                addListeners($main);
                 addRecordsChangedListeners(datastore);
             });
 
@@ -193,7 +194,7 @@ $(function () {
         var pingData = {
             id : ping.getId(),
             val : ping.get('val'),
-            timestamp : ping.get('timestamp')
+            create_time : ping.get('create_time')
         };
         return ich.ping(pingData);
     }
@@ -229,37 +230,54 @@ $(function () {
     }
 
     function addRecordsChangedListeners(datastore) {
-        datastore.recordsChanged.addListener(rcPingsChangedCb);
+
+        var rcTargetCb = rcCbBuilder(targetTable, templateTable, renderTemplate);
+        var rcPingCb = rcCbBuilder(pingTable, targetTable, renderTarget);
+        var rcTemplateCb = rcCbBuilder(templateTable, templateTable, renderTemplate);
+
+        datastore.recordsChanged.addListener(rcTargetCb);
+        datastore.recordsChanged.addListener(rcPingCb);
+        datastore.recordsChanged.addListener(rcTemplateCb);
     }
 
     /**
-     *
-     * @param rcEvent
+     * Records changed callback builder. For each record that gets changed,
+     * rerender its parent.  Then bind the listeners to the new parent's jquery
+     * elements (stuff like listener
+     * @param table
+     * @param parentTable
+     * @param parentRenderFn
+     * @returns {Function}
      */
-    function rcPingsChangedCb(rcEvent) {
-        console.log("callback invoked!!");
-        var changedPings = rcEvent.affectedRecordsForTable(pingTable), changedTargetIds = [];
-        var i, parent_id, changedTarget;
+    function rcCbBuilder(table, parentTable, parentRenderFn) {
+        return function (rcEvent) {
 
-        // get the affected target ids
-        for (i=0; i<changedPings.length; i+=1) {
-            parent_id = changedPings[i].get('parent_id');
-            if ($.indexOf(parent_id, changedTargetIds))
-                changedTargetIds.push(parent_id);
-        }
+            console.log("Affected table: " + table.getId());
 
-        // render the affected target ids
-        for (i=0; i<changedTargetIds.length; i+=1) {
-            changedTarget = targetTable.get(changedTargetIds[i]);
-            $('#' + changedTarget.getId()).replaceWith(renderTarget(changedTarget));
+            var changedRecords = rcEvent.affectedRecordsForTable(table.getId());
+            var i, changedParent, $changedParent;
+
+            // get affected parent ids
+            var changedParentIds = DatastoreUtil.parentSet(changedRecords);
+
+            console.log("Num affected ids: " + changedParentIds);
+
+            for (i=0; i<changedParentIds.length; i+=1) {
+                changedParent = parentTable.get(changedParentIds[i]);
+                $changedParent = parentRenderFn(changedParent);
+                $('#' + changedParent.getId()).replaceWith($changedParent);
+                addListeners($changedParent);
+            }
         }
     }
 
     /**
      * Registers all the DOM listeners. Should be called whenever the datastore is changed.
      */
-    function addListeners() {
-        $('button.ping_add').click(pingAddCb);
+    function addListeners($root) {
+        $root.find('button.ping_add').click(pingAddCb);
+        $root.find('button.target_add').click(targetAddCb);
+        $root.find('button.template_add').click(templateAddCb);
     }
 
     /**
@@ -271,18 +289,39 @@ $(function () {
         var $target = $(this).closest('.target');
         var $parent = $(this).parent();
         var parent_id = $target.attr('id'), val = $parent.find("input").val(), createTime = new Date();
-        var ping = PingTree.buildPing(parent_id, val, createTime);
-        console.log("building ping! parent_id: " + parent_id + " val: " + val + " create: " + createTime);
         pingTable.insert(PingTree.buildPing(parent_id, val , createTime));
     }
 
-    function addTargetListeners() {
-        var parent_id = $('button.ping_add').parents('li').attr('id');
-        targetTable.insert(PingTree.buildTarget());
-
+    /**
+     * Callback for the target_add button. Creates a new target.
+     * @param e
+     */
+    function targetAddCb(e) {
+        e.preventDefault();
+        var $template = $(this).closest('.template');
+        var $parent = $(this).parent();
+        var parent_id = $template.attr('id'),
+            name = $parent.find("input[name='name']").val();
+            val = $parent.find("input[name='val']").val(),
+            valName = $parent.find("input[name='valName']").val(),
+            valUpperBound = $parent.find("input[name='valUpperBound']").val(),
+            targetCount = $parent.find("input[name='targetCount']").val(),
+            countUpperBound = $parent.find("input[name='countUpperBound']").val(),
+            createTime = new Date();
+        targetTable.insert(PingTree.buildTarget(name, parent_id, val, valUpperBound, valName, targetCount, countUpperBound, createTime));
     }
 
-    function addTemplateListeners() {
-
+    /**
+     * Callback for the template_add button. Creates a new template.
+     * @param e
+     */
+    function templateAddCb(e) {
+        e.preventDefault();
+        var $template = $(this).closest('.template');
+        var $parent = $(this).parent();
+        var parent_id = $template.attr('id'),
+            name = $parent.find("input[name='name']").val();
+        console.log(PingTree.buildTemplate(name, parent_id));
+        templateTable.insert(PingTree.buildTemplate(name, parent_id));
     }
 });

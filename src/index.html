@@ -42,7 +42,7 @@
             <form class="template_form">
                 <div>
                     <label>Template name:
-                        <input type="text" id="name">
+                        <input type="text" name="name">
                     </label>
                 </div>
                 <button type="submit" class="template_add">
@@ -65,17 +65,23 @@
 
         <script id="target_form" type="text/html">
             <form class="target_form">
+                <label>Target name:
+                    <input type="text" name="name"/>
+                </label>
                 <label>Val name:
-                    <input type="text"/>
+                    <input type="text" name="valName"/>
                 </label>
                 <label>Val:
-                    <input type="number">
+                    <input type="number" name="val">
                 </label>
                 <label>Upper bound on val?
-                    <input type="checkbox">
+                    <input type="checkbox" name="valUpperBound">
+                </label>
+                <label>Target count:
+                    <input type="number" name="targetCount">
                 </label>
                 <label>Upper bound on count?
-                    <input type="checkbox">
+                    <input type="checkbox" name="countUpperBound">
                 </label>
                 <button type="submit" class="target_add">
                     &plus;
@@ -85,7 +91,7 @@
 
         <script id="ping" type="text/html">
             <li id={{id}} class="ping">
-                {{valName}}: {{val}}  Time: {{timestamp}}
+                {{valName}}: {{val}}  Time: {{create_time}}
             </li>
         </script>
 

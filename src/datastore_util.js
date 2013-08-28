@@ -79,6 +79,21 @@ var DatastoreUtil = {
             console.log("wiping " + allRecords[i].getId());
             allRecords[i].deleteRecord();
         }
+    },
+
+    /**
+     * Gets the unique set of parent records, assuming each record
+     * in records has a parent_id.
+     * @param record Array[Datastore.Record]
+     */
+    parentSet : function(records) {
+        var ret = [], i, parent_id;
+        for (i=0; i<records.length; i+=1) {
+            parent_id = records[i].get('parent_id');
+            if (ret.indexOf(parent_id) === -1)
+                ret.push(parent_id);
+        }
+        return ret;
     }
 }
 exports.DatastoreUtil = DatastoreUtil;
