@@ -194,10 +194,11 @@ $(function () {
      * @returns {*|jQuery}
      *      jquery li element for a ping which has its info and a delete button
      */
-    function renderPing(ping) {
+    function renderPing(ping, valName) {
         var pingData = {
             id : ping.getId(),
             val : ping.get('val'),
+            valName: valName,
             create_time : ping.get('create_time')
         };
         return ich.ping(pingData);
@@ -211,11 +212,11 @@ $(function () {
      *      target as well as a pingform which is used to ping the target.
      */
     function renderTarget(target) {
-        var id = target.getId();
+        var id = target.getId(), valName = target.get('val_name');
         var targetData = {
             id : target.getId(),
             val : target.get('val'),
-            valName : target.get('val_name'),
+            valName : valName,
             count : target.get('count'),
             name : target.get('name')
         };
@@ -228,13 +229,17 @@ $(function () {
         $pings.empty();
 
         for (i=0; i<pings.length; i+=1)
-            $pings.append(renderPing(pings[i]));
+            $pings.append(renderPing(pings[i], valName));
 
         $pingForm = renderPingForm(target.get('val_name'), target.get('val'));
         $pingForm.hide();
         return $target.append($pingForm);
     }
 
+    /**
+     *
+     * @param datastore
+     */
     function addRecordsChangedListeners(datastore) {
 
         var rcTargetCb = rcCbBuilder(targetTable, templateTable, renderTemplate);
@@ -342,7 +347,6 @@ $(function () {
         var $parent = $(this).parent();
         var parent_id = $template.attr('id'),
             name = $parent.find("input[name='name']").val();
-        console.log(PingTree.buildTemplate(name, parent_id));
         templateTable.insert(PingTree.buildTemplate(name, parent_id));
     }
 });
