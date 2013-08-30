@@ -188,7 +188,12 @@ $(function () {
 
         var $target = ich.target(DatastoreUtil.getFieldsWithId(target));
 
-        var pings = pingTable.query({parentId : id});
+        var curDay = PingUtil.roundDay(new Date());
+        // right now just fetches the ones that were made on this day
+        var pings = pingTable.query({
+            parentId : id,
+            createDay : curDay
+        });
         var $pings = $target.children('.pings');
         $pings.empty();
 
@@ -201,7 +206,8 @@ $(function () {
     }
 
     /**
-     *
+     * Adds listeners which will be invoked whenever the records are changed.
+     * For the most paret, these just handle rerendering the items.
      * @param datastore
      */
     function addRecordsChangedListeners(datastore) {
