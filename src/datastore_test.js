@@ -116,7 +116,7 @@ if (client.isAuthenticated()){
                 describe("Template ", function() {
                     describe("#getDeepTargets", function() {
                         it ("should contain both target and target1", function() {
-                            fetched = PingUtil.PingUtils.allTargets(topTemplate, templateTable, targetTable);
+                            fetched = PingUtil.PingUtil.allTargets(topTemplate, templateTable, targetTable);
                             assert(fetched.length==2);
                             assert(fetched[0].getId() == target1.getId());
                             assert(fetched[1].getId() == target.getId());

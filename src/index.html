@@ -15,8 +15,8 @@
 
         <!-- mine -->
         <script src="datastore_util.js"></script>
+        <script src="ping_util.js"></script>
         <script src="ping.js"></script>
-        <script src="ping_utils.js"></script>
         <script src="app.js"></script>
 
         <!-- style -->
@@ -103,7 +103,7 @@
 
         <script id="ping" type="text/html">
             <li id={{id}} class="ping">
-                ({{valName}}: {{val}}) (Time: {{create_time}})
+                ({{valName}}: {{val}}) (Time: {{createTime}})
             </li>
         </script>
 
@@ -123,7 +123,16 @@
 		<!-- Hide UI until user has authenticated -->
 		<div id="wrapper">
 			<div id="main" >
+                <div id = "globalCreateTemplate">
+                    <button id="globalCreateTemplateButton">Global Template</button>
+                </div>
+
+                <div id = "globalCreateTarget">
+                    <button id="globalCreateTargetButton">Global Target</button>
+                </div>
                 <!-- all the stuff goes here -->
+                <ul id = "itemList">
+                </ul>
 			</div>
 
 			<div id="login">

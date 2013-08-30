@@ -15,8 +15,10 @@
  *      the faster route might just be to make everything >= Target mutable.
  */
 
-
 var DatastoreUtil = {
+
+    defaultParentIdField : "parentId",
+
     /**
      * A function which will wait a maximum number of times for the datastore to finish syncing.
      * @param datastore
@@ -83,16 +85,26 @@ var DatastoreUtil = {
 
     /**
      * Gets the unique set of parent records, assuming each record
-     * in records has a parent_id.
-     * @param record Array[Datastore.Record]
+     * in records has a parentId.
+     * @param records Array[Datastore.Record]
+     * @param parentIdField String. name of the field that has the parent id
      */
-    parentSet : function(records) {
-        var ret = [], i, parent_id;
+    parentSet : function(records, parentIdField) {
+        var ret = [], i, parentId;
         for (i=0; i<records.length; i+=1) {
-            parent_id = records[i].get('parent_id');
-            if (ret.indexOf(parent_id) === -1)
-                ret.push(parent_id);
+            parentId = records[i].get(parentIdField);
+            if (ret.indexOf(parentId) === -1)
+                ret.push(parentId);
         }
+        return ret;
+    },
+
+    /**
+     * Useful for icanhaz.js templating
+     */
+    getFieldsWithId : function(record) {
+        var ret = record.getFields();
+        ret.id = record.getId();
         return ret;
     }
 }
