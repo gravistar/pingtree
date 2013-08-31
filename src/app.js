@@ -25,18 +25,6 @@ $(function () {
     var targetTableName = "targets";
     var templateTableName = "templates";
     var schedulerTableName = "scheduler";
-    var schedulerId = "0xCAFEBABE";
-
-    // utility methods
-
-    // Insert a new task record into the table.
-    function insertTask(text) {
-        taskTable.insert({
-            taskname: text,
-            created: new Date(),
-            completed: false
-        });
-    }
 
     // The login button will start the authentication process.
     $('#loginButton').click(function (e) {
@@ -70,17 +58,42 @@ $(function () {
             schedulerTable = datastore.getTable(schedulerTableName);
 
             // clear all the stuff (just testing)
+            /**
             DatastoreUtil.wipe(pingTable);
             DatastoreUtil.wipe(targetTable);
             DatastoreUtil.wipe(templateTable);
             DatastoreUtil.wipe(schedulerTable);
+            */
 
             // setup the dom
             addGlobalElements();
 
             // setup the datastore
             addRecordsChangedListeners(datastore);
+
+            // render the saved root elements
+            renderRootElements();
         });
+    }
+
+    function renderRootElements() {
+        var queryParam = {parentId : PingTree.NO_PARENT};
+        var rootTargets = targetTable.query(queryParam);
+        var rootTemplates = templateTable.query(queryParam);
+        var i;
+        var $itemList = $('#itemList');
+        var $curElem;
+        for (i=0; i<rootTemplates.length; i+=1) {
+            $curElem = renderTemplate(rootTemplates[i]);
+            $itemList.append($curElem);
+            addListeners($curElem);
+        }
+
+        for (i=0; i<rootTargets.length; i+=1) {
+            $curElem = renderTarget(rootTargets[i]);
+            $itemList.append($curElem);
+            addListeners($curElem);
+        }
     }
 
     /**
@@ -243,6 +256,10 @@ $(function () {
             var $main = $('#itemList');
             for (i=0; i<changedRecords.length; i+=1) {
                 changedRecord = changedRecords[i];
+                if (changedRecord.isDeleted()) {
+                    $('#' + changedRecord.getId()).remove();
+                    continue;
+                }
                 if (changedRecord.get(DatastoreUtil.defaultParentIdField) ===
                     PingTree.NO_PARENT) {
                     $changedRecord = renderFn(changedRecord);
@@ -273,6 +290,11 @@ $(function () {
      * Registers all the DOM listeners on subtree of $root. Should be called whenever the datastore is changed.
      */
     function addListeners($root) {
+        // these can definitely have code sharing
+        var pingDelCb = recordDelCbBuilder(pingTable, function(ping) { ping.deleteRecord() });
+        var targetDelCb = recordDelCbBuilder(targetTable, targetDel);
+        var templateDelCb = recordDelCbBuilder(templateTable, templateDel);
+
         $root.find('button.ping_add').click(pingAddCb);
         $root.find('button.target_add').click(targetAddCb);
         $root.find('button.template_add').click(templateAddCb);
@@ -291,6 +313,10 @@ $(function () {
             var $parent = $(this).parent();
             $parent.children('.ping_form').toggle();
         });
+
+        $root.find('button.ping_del').click(pingDelCb);
+        $root.find('button.target_del').click(targetDelCb);
+        $root.find('button.template_del').click(templateDelCb);
     }
 
     /**
@@ -387,4 +413,50 @@ $(function () {
         var $parent = $(this).parent();
         createTemplateRecordFromForm($parent, PingTree.NO_PARENT);
     }
+
+    /**
+     * Builders an event callback for deleting records
+     * @param delFn
+     * @returns {Function}
+     */
+    function recordDelCbBuilder(recordTable, delFn){
+        return function (e) {
+            e.preventDefault();
+            var $parent = $(this).parent();
+            var id = $parent.attr('id');
+            var record = recordTable.get(id);
+            delFn(record);
+        };
+    }
+
+    /**
+     * Deletes the subtree of records rooted at target (along with target).
+     * @param target
+     */
+    function targetDel(target) {
+        var pings = pingTable.query({parentId : target.getId()});
+        for (var i=0; i<pings.length; i+=1)
+            pings[i].deleteRecord();
+        target.deleteRecord();
+    }
+
+    /**
+     * Deletes the subtree of records rooted at template (along with template).
+     * @param template
+     */
+    function templateDel(template) {
+        var id = template.getId();
+        var queryParams = {parentId : id};
+        var subtemplates = templateTable.query(queryParams), targets = targetTable.query(queryParams);
+        var i;
+
+        for (i=0; i<subtemplates.length; i+=1)
+            templateDel(subtemplates[i]);
+
+        for (i=0; i<targets.length; i+=1)
+            targetDel(targets[i]);
+
+        template.deleteRecord();
+    }
+
 });

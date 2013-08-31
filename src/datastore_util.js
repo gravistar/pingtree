@@ -90,9 +90,12 @@ var DatastoreUtil = {
      * @param parentIdField String. name of the field that has the parent id
      */
     parentSet : function(records, parentIdField) {
-        var ret = [], i, parentId;
+        var ret = [], i, parentId, curRecord;
         for (i=0; i<records.length; i+=1) {
-            parentId = records[i].get(parentIdField);
+            curRecord = records[i];
+            if (curRecord.isDeleted())
+                continue;
+            parentId = curRecord.get(parentIdField);
             if (ret.indexOf(parentId) === -1)
                 ret.push(parentId);
         }
