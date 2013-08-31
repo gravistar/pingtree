@@ -3,7 +3,8 @@ var https = require('https');
 var fs = require('fs');
 
 var options = {
-    key: fs.readFileSync('~/pingtreekey.pem')
+    cert: fs.readFileSync('/home/ubuntu/cert-HVVSRHBS3HEANANVBBISZY75WZ3OQM2X.pem'),
+    key: fs.readFileSync('/home/ubuntu/pk-HVVSRHBS3HEANANVBBISZY75WZ3OQM2X.pem')
 };
 var port = 443;
 var app = express();
